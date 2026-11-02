@@ -1,0 +1,283 @@
+=========================================================================================
+SWA
+=========================================================================================
+
+==========[ Escalate Mode ]==========
+
+enable
+
+configure terminal
+
+
+==========[ Basic Configurations ]==========
+
+hostname SWA
+
+no ip domain-lookup
+
+
+==========[ Creating VLANs ]==========
+
+vlan 10
+ name MGR
+exit
+
+vlan 20
+ name LKM
+exit
+
+vlan 30
+ name Office
+exit
+
+vlan 40
+ name Recording
+exit
+
+vlan 50
+ name NVD
+exit
+
+vlan 60
+ name HTB
+exit
+
+vlan 190
+ name Native
+exit
+
+vlan 672
+ name SHUT
+exit
+
+
+==========[ Assigning VLANs to Ports ]==========
+
+interface f0/1
+ description VLAN 10 - MGR
+ switchport mode access
+ switchport access vlan 10
+exit
+
+interface f0/2
+ description VLAN 20 - LKM
+ switchport mode access
+ switchport access vlan 20
+exit
+
+interface f0/3
+ description VLAN 30 - Office Hub
+ switchport mode access
+ switchport access vlan 30
+exit
+
+interface f0/4
+ description VLAN 40 - Recording
+ switchport mode access
+ switchport access vlan 40
+exit
+
+
+interface range f0/5-9
+ description Not In Use | For Reserve
+ switchport mode access 
+ switchport access vlan 672
+ shutdown
+exit
+
+interface range f0/11-24
+ description Not In Use | For Reserve
+ switchport mode access 
+ switchport access vlan 672
+ shutdown
+exit
+
+interface g0/2
+ description Not In Use | For Reserve
+ switchport mode access
+ switchport access vlan 672
+ shutdown
+exit
+
+
+==========[ Configuring Trunk ]==========
+
+interface f0/10
+ description Trunk Link to SWB - USE WITH CAUTION!
+ switchport mode trunk
+ switchport trunk native vlan 190
+ switchport trunk allowed vlan 10,20,30,40,50,60,190
+exit
+
+interface g0/1
+ description Trunk Link to R1 - USE WITH CAUTION!
+ switchport mode trunk
+ switchport trunk native vlan 190
+ switchport trunk allowed vlan 10,20,30,40,50,60,190
+exit
+
+
+==========[ Configuring Port Security ]==========
+
+interface f0/1
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address 0003.E491.2178      // PC - A1's MAC address
+ switchport port-security violation shutdown
+exit
+
+interface f0/2
+ switchport mode access
+ switchport port-security 
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+exit
+
+interface f0/3
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation protect
+exit
+
+interface f0/4                                // Note there is no aging type syntax in Cisco 2960 IOS
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security violation restrict
+ switchport port-security aging time 2
+exit
+
+
+==========[ Save Running Configuration (Global) ]==========
+
+do copy running-config startup-config
+
+
+
+
+=========================================================================================
+SWB
+=========================================================================================
+
+==========[ Escalate Mode ]==========
+
+enable
+
+configure terminal
+
+
+==========[ Basic Configurations ]==========
+
+hostname SWB
+
+no ip domain-lookup
+
+
+==========[ Creating VLANs ]==========
+
+vlan 10
+ name MGR
+exit
+
+vlan 20
+ name LKM
+exit
+
+vlan 30
+ name Office
+exit
+
+vlan 40
+ name Recording
+exit
+
+vlan 50
+ name NVD
+exit
+
+vlan 60
+ name HTB
+exit
+
+vlan 190
+ name Native
+exit
+
+vlan 674
+ name SHUT
+exit
+
+
+==========[ Assigning VLANs to Ports ]==========
+
+interface f0/1
+ description VLAN 50 - NVD
+ switchport mode access
+ switchport access vlan 50
+exit
+
+interface f0/2 
+ description VLAN 60 - HTB
+ switchport mode access
+ switchport access vlan 60
+exit
+
+interface range f0/3-9
+ description Not In Use | For Reserve
+ switchport mode access 
+ switchport access vlan 674
+ shutdown
+exit
+
+interface range f0/11-24
+ description Not In Use | For Reserve
+ switchport mode access 
+ switchport access vlan 674
+ shutdown
+exit
+
+interface range g0/1-2
+ description Not In Use | For Reserve
+ switchport mode access
+ switchport access vlan 674
+ shutdown
+exit
+
+
+==========[ Configuring Trunk ]==========
+
+interface f0/10
+ description Trunk Link to SWA - USE WITH CAUTION!
+ switchport mode trunk
+ switchport trunk native vlan 190
+ switchport trunk allowed vlan 10,20,30,40,50,60,190
+exit
+
+
+==========[ Configuring Port Security ]==========
+
+interface f0/1
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security mac-address 000A.4147.6258       // PC-B1's MAC address   
+ switchport port-security violation shutdown
+exit
+
+interface f0/2
+ switchport mode access
+ switchport port-security 
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+exit
+
+
+==========[ Save Running Configuration (Global) ]==========
+
+do copy running-config startup-config
