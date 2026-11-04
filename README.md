@@ -145,6 +145,50 @@ end
 
 Replace `<interface>` with the affected port, for example `fa0/1`. Re-enabling the port does not resolve the cause of the violation, so make sure the unauthorized device has been removed first.
 
+#### F.2. Check MAC Address/es on a Port
+Use these commands to see which MAC addresses are associated with an interface:
+
+```text
+show mac address-table interface fa0/1
+show port-security address
+show port-security interface fa0/1
+```
+
+Replace `fa0/1` with the interface you want to check. The MAC address table shows addresses learned on the port; the port-security commands show secure addresses and violation details.
+
+#### Remove a secure MAC address
+
+The removal method depends on how the secure MAC address was added:
+
+- **Dynamically learned secure MAC:**  
+  ```text
+  clear port-security dynamic interface fa0/4
+  ```
+
+- **Sticky secure MAC:**  
+  ```text
+  clear port-security sticky interface fa0/2
+  ```
+
+- **Manually configured secure MAC:** Remove its entry from the interface configuration:
+  ```text
+  configure terminal
+  interface fa0/1
+  no switchport port-security mac-address <mac-address>
+  end
+  ```
+
+To clear a dynamically learned entry from the regular MAC address table—not the port-security list—use:
+
+```text
+clear mac address-table dynamic interface fa0/1
+```
+
+These commands may vary by switch model or Packet Tracer version. Check the command prompt’s available options if a command is not accepted. Save the configuration only if you want the change to persist after a reboot:
+
+```text
+copy running-config startup-config
+```
 ---
 
 ### G. Known Limitations
