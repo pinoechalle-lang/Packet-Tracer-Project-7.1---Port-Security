@@ -93,11 +93,24 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 | SWA | G0/1 | VLAN 190 (untagged) | VLAN 10,20,30,40,50,60,190 | R1|
 | SWB | Fa0/10 | VLAN 190 (untagged) | V:AN 50,60,190 | SWA |
 
-> **NOTE:** All trunks in this topology use VLAN 190 as their native VLAN for consistency. 
+> **NOTE:** All trunks in this topology use VLAN 190 as their native VLAN for consistency. The native VLAN must match at both ends of each trunk. Using the same native VLAN on separate trunks is a design choice for consistency.
 
 ---
 
-### Troubleshooting Commands
+### E. Test and Validate the Configurations
+
+Perform these tests in Packet Tracer after configuring the switches. Test violation actions only on access ports, not on trunks.
+
+- Check the port-security and trunk configurations using `show port-security`, `show port-security address`, and `show interfaces trunk`.
+- Connect each approved device and confirm that it has network access.
+- Confirm if the right MAC/s is configured in the secured MAC list of each port by issuing the command `show running-config`.
+- In the lab, test an unauthorized device on an access port and confirm the configured violation action: protect drops traffic, restrict drops and records the violation, and shutdown disables the port.
+- Test connectivity between departments with ping to confirm inter-VLAN routing through R1.
+- Confirm unused ports are shut down and assigned to their designated parking VLANs.
+
+---
+
+### F. Troubleshooting Commands
 
 Refer to the table below to troubleshoot issues related to port security protocols. Additionally, use these provided commands to doublecheck your configurations that you made.
 
@@ -117,7 +130,7 @@ Refer to the table below to troubleshoot issues related to port security protoco
 
 ---
 
-### Known Limitations
+### G. Known Limitations
 
 - Packet Tracer can't generate a real MAC flooding attack.
 - The features of port security in Packet Tracer are limited
