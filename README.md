@@ -84,9 +84,77 @@ Port security limits **which MAC addresses, and how many, are allowed on a port*
 
 > **Why port security is omitted on trunks:** A trunk carries source MAC addresses for many devices across multiple VLANs. A secure-MAC limit may be exceeded during normal operation; a violation could disrupt the trunk and affect multiple VLANs. This project secures trunks by explicitly configuring trunk mode, allowed VLANs, and the native VLAN consistently at both ends.
 
+> **Important—MAC learning is traffic-triggered:** Connecting a device to a port does not, by itself, cause the switch to learn its MAC address as a secure address. For dynamic and sticky learning, the device must send a frame through the port. Until it sends traffic, its MAC may not appear in `show port-security address`, and a sticky address may not yet be present in the running configuration. Generate traffic from the device (for example, ping its default gateway), then check the secure-address list. Static secure MAC addresses are configured manually and do not depend on the device sending a frame.
+
 ---
 
-### D. Trunk Policies in SWA and SWB
+### D. VLANs, Subnets, and Router Configuration
+
+R1 provides inter-VLAN routing using router-on-a-stick. Each user VLAN has a /24 subnet, and the router subinterface address is the default gateway for that VLAN.
+
+| VLAN | Department | Subnet | R1 default gateway |
+|---:|---|---|---|
+| 10 | MGR | `192.168.10.0/24` | `192.168.10.254` |
+| 20 | LKM | `192.168.20.0/24` | `192.168.20.254` |
+| 30 | Office | `192.168.30.0/24` | `192.168.30.254` |
+| 40 | Recording | `192.168.40.0/24` | `192.168.40.254` |
+| 50 | NVD | `192.168.50.0/24` | `192.168.50.254` |
+| 60 | HTB | `192.168.60.0/24` | `192.168.60.254` |
+| 190 | Native VLAN | No user subnet configured | None |
+
+The host IP addresses should be in the subnet for their VLAN, use mask `255.255.255.0`, and use the listed R1 address as the default gateway. VLAN 190 is the native VLAN on the trunks; the supplied router configuration does not assign it a user subnet or gateway.
+
+Configure R1's `G0/0` interface as follows. The subinterface VLAN IDs and IP addresses must match the VLAN and subnet plan above:
+
+```text
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+
+interface g0/0
+ no shutdown
+exit
+
+interface g0/0.10
+ encapsulation dot1q 10
+ ip address 192.168.10.254 255.255.255.0
+exit
+
+interface g0/0.20
+ encapsulation dot1q 20
+ ip address 192.168.20.254 255.255.255.0
+exit
+
+interface g0/0.30
+ encapsulation dot1q 30
+ ip address 192.168.30.254 255.255.255.0
+exit
+
+interface g0/0.40
+ encapsulation dot1q 40
+ ip address 192.168.40.254 255.255.255.0
+exit
+
+interface g0/0.50
+ encapsulation dot1q 50
+ ip address 192.168.50.254 255.255.255.0
+exit
+
+interface g0/0.60
+ encapsulation dot1q 60
+ ip address 192.168.60.254 255.255.255.0
+exit
+
+end
+copy running-config startup-config
+```
+
+Connect R1 `G0/0` to SWA `G0/1`. The SWA-to-R1 trunk must allow VLANs 10, 20, 30, 40, 50, 60, and 190. The router configuration shown above follows the supplied project configuration; it does not create a routed subinterface for native VLAN 190.
+
+---
+
+### E. Trunk Policies in SWA and SWB
 
 | Switch | Trunk port | Native VLAN | Allowed VLANs | Connected to |
 |---|---|---|---|---|
@@ -98,22 +166,22 @@ Port security limits **which MAC addresses, and how many, are allowed on a port*
 
 ---
 
-### E. Test and Validate the Configurations
+### F. Test and Validate the Configurations
 
 Perform these checks in Packet Tracer after configuring the switches. Test violation actions only on access ports, never on trunk ports.
 
 1. **Check the configuration:** Run `show port-security`, `show port-security address`, and `show interfaces trunk` on the switches.
-2. **Check secure MAC addresses:** Use `show port-security address` to view secure MAC addresses and their types. Use `show mac address-table interface <interface>` to see MAC addresses learned on a particular port. `show running-config` shows configured settings and saved sticky MAC entries, not every dynamically learned address.
-3. **Test approved devices:** Connect each approved device and confirm it has network access.
-4. **Test violation behavior in the lab:** On an access port only, connect an unauthorized device and confirm the configured response: `protect` drops unauthorized traffic, `restrict` drops and records it, and `shutdown` places the port into an error-disabled state.
+2. **Generate traffic before checking learned secure MACs:** Connect each approved device and make it send traffic, such as a ping to its default gateway. Port security learns dynamic or sticky MAC addresses from source frames; plugging in a device without sending traffic is not enough. Then verify with `show port-security address` and `show mac address-table interface <interface>`.
+3. **Test approved devices:** Confirm each device can reach its default gateway and has network access.
+4. **Test violation behavior in the lab:** On an access port only, connect an unauthorized device and have it send traffic. Confirm the configured response: `protect` drops unauthorized traffic, `restrict` drops and records it, and `shutdown` disables the port.
 5. **Test inter-VLAN connectivity:** Use `ping` between devices in different departments to confirm routing through R1.
 6. **Check unused ports:** Use `show vlan brief` and `show interfaces status` to confirm unused ports are in the designated parking VLAN and shut down.
 
-For `shutdown` tests, reconnect the approved device and follow the recovery steps in Section F.1.
+For `shutdown` tests, reconnect the approved device and follow the recovery steps in Section G.1. Save the switch configuration after sticky addresses have been learned if those addresses must persist after a reboot.
 
 ---
 
-### F. Troubleshooting
+### G. Troubleshooting
 
 | Command | What it shows | When to use it |
 |---|---|---|
@@ -129,7 +197,7 @@ For `shutdown` tests, reconnect the approved device and follow the recovery step
 
 > **Violation detail:** On `show port-security interface <interface>`, check **Last Source Address:VLAN** for the source MAC and VLAN associated with the latest violation.
 
-#### F.1. Re-enable an `err-disabled` port
+#### G.1. Re-enable an `err-disabled` port
 
 A port using the `shutdown` violation action may become `err-disabled` after a violation. First remove the unauthorized device and check the cause; then re-enable the interface:
 
@@ -146,9 +214,9 @@ end
 
 Replace `fa0/1` with the affected interface. The shutdown/no-shutdown sequence resets the interface, but it does not fix the cause of the violation. Make sure the unauthorized device is removed before bringing the port back up.
 
-#### F.2. Check MAC addresses on a port
+#### G.2. Check MAC addresses on a port
 
-Replace `fa0/1` with the interface you want to inspect:
+Replace `fa0/1` with the interface you want to inspect. If the device has not sent any frames, its dynamically or sticky-learned MAC may not appear yet; generate traffic first.
 
 ```text
 show mac address-table interface fa0/1
@@ -158,11 +226,9 @@ show port-security address
 
 The MAC address table shows addresses learned on the port. The port-security commands show secure entries and violation details. Dynamically learned secure addresses may not appear in the running configuration.
 
-#### F.3. Remove a secure MAC address
+#### G.3. Remove a secure MAC address
 
-Packet Tracer does not support the `clear port-security` commands for this project. Remove a configured secure MAC from the interface configuration instead. Use the exact MAC address and entry type shown in the configuration.
-
-To remove a manually configured secure MAC address:
+Packet Tracer does not support the `clear port-security` commands for this project. For a manually configured secure MAC, remove its exact entry from the interface configuration:
 
 ```text
 configure terminal
@@ -171,7 +237,7 @@ no switchport port-security mac-address xxxx.xxxx.xxxx
 end
 ```
 
-To remove a configured sticky MAC entry, negate the sticky entry:
+For a sticky MAC that has been written to the configuration, remove the exact sticky entry if the Packet Tracer IOS image accepts the command:
 
 ```text
 configure terminal
@@ -180,9 +246,9 @@ no switchport port-security mac-address sticky xxxx.xxxx.xxxx
 end
 ```
 
-Replace the example interface and MAC address with the actual values. Packet Tracer command support can vary by version; check the interface configuration and verify the result with `show port-security address` and `show running-config interface <interface>`.
+Replace the example interface and MAC address with the actual values. Packet Tracer command support can vary by version. Verify changes with `show port-security address` and `show running-config interface <interface>`. A dynamically learned secure MAC on SWA Fa0/4 should age out after the configured two-minute absolute aging period; it can be learned again when the device sends traffic. Clearing the regular MAC address table is not the same as removing a secure MAC entry.
 
-The dynamically learned secure MAC on SWA Fa0/4 is configured to age out after two minutes (absolute aging). It can be learned again when the approved device sends traffic. Clearing the regular MAC address table is not the same as removing a secure MAC entry. Save configuration changes if they should remain after a reboot:
+Save configuration changes, including sticky MAC entries that should persist after a reboot, with:
 
 ```text
 copy running-config startup-config
@@ -190,7 +256,7 @@ copy running-config startup-config
 
 ---
 
-### G. Known Limitations
+### H. Known Limitations
 
 - Packet Tracer cannot generate a real MAC flooding attack.
 - Port-security features in Packet Tracer are limited and may differ from real switch hardware.
