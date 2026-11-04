@@ -160,35 +160,20 @@ Replace `fa0/1` with the interface you want to check. The MAC address table show
 
 The removal method depends on how the secure MAC address was added:
 
-- **Dynamically learned secure MAC:**  
-  ```text
-  clear port-security dynamic interface fa0/4
-  ```
-
-- **Sticky secure MAC:**  
-  ```text
-  clear port-security sticky interface fa0/2
-  ```
-
-- **Manually configured secure MAC:** Remove its entry from the interface configuration:
+- **Remove secure MAC:** Remove its entry from the interface configuration:
   ```text
   configure terminal
   interface fa0/1
-  no switchport port-security mac-address <mac-address>
-  end
+   no switchport port-security mac-address <mac-address>
+  exit
   ```
 
-To clear a dynamically learned entry from the regular MAC address table—not the port-security list—use:
-
-```text
-clear mac address-table dynamic interface fa0/1
-```
-
-These commands may vary by switch model or Packet Tracer version. Check the command prompt’s available options if a command is not accepted. Save the configuration only if you want the change to persist after a reboot:
+After removing the secure MAC, you can either configure a new one or if dynamic MAC learning is enabled on the port, simply attach whatever device to a porn.
 
 ```text
 copy running-config startup-config
 ```
+
 ---
 
 ### G. Known Limitations
