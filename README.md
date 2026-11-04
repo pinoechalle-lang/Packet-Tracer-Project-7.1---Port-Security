@@ -2,8 +2,9 @@
 
 ![Project 7.1 Screenshot](https://github.com/pinoechalle-lang/Packet-Tracer-Project-7.1---Port-Security/blob/main/Screenshot%202026-11-02%20201615.png)
 
+---
 
-## Scenario
+### Scenario
 
 **Company:** Larkspur Logistics (fictional), a regional distribution company.
 
@@ -17,7 +18,7 @@ The network engineer (you) is asked to configure the branch access switches so t
 
 ---
 
-## Why Port Security Matters
+### Why Port Security Matters
 
 A switch builds its MAC address (CAM) table by reading the **source MAC address** of every frame it receives. By default, it trusts whatever it sees.
 
@@ -31,6 +32,13 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 
 ---
 
-## Requirements
+### Requirements
 
-### Business Requirements
+- Only approved devices may use each access port. 
+- The reaction to an unauthorized device must match the risk of the location.
+- Approved devices must keep working after a reboot, where the business needs that. 
+- Unused wall jacks and switch ports must not provide network access. 
+- A shared office port must support exactly two devices behind a hub. 
+- IT must be able to see which port was violated and by which MAC. 
+- IT must be able to restore a locked-down port quickly once the problem is resolved. 
+-Departments must still be able to communicate with each other (through R1). 
