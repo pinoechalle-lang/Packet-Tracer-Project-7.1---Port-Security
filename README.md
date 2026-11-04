@@ -93,6 +93,8 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 | SWA | G0/1 | VLAN 190 (untagged) | VLAN 10,20,30,40,50,60,190 | R1|
 | SWB | Fa0/10 | VLAN 190 (untagged) | V:AN 50,60,190 | SWA |
 
+> **NOTE:** All trunks in this topology use VLAN 190 as their native VLAN for consistency. 
+
 ---
 
 ### Troubleshooting Commands
