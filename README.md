@@ -156,7 +156,7 @@ show port-security interface fa0/1
 
 Replace `fa0/1` with the interface you want to check. The MAC address table shows addresses learned on the port; the port-security commands show secure addresses and violation details.
 
-#### Remove a secure MAC address
+#### F.3. Remove a secure MAC address
 
 The removal method depends on how the secure MAC address was added:
 
