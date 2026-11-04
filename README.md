@@ -44,7 +44,7 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 -Departments must still be able to communicate with each other (through R1).
 
 #### C.1. Security Policies for Each Port in SWA and SWB
-##### SWA
+##### A. SWA
 
 | Port | Device | Secure MAC type | Max | Violation | Aging |
 |---|---|---|---|---|---|
@@ -56,7 +56,7 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 | G0/1 | R1 | Trunk | None | n/a | n/a |
 | Fa0/5-9, Fa0/11-24, G0/2 | None | n/a | n/a | n/a | Parked in VLAN 672, shut down |
 
-##### SWB
+##### B. SWB
 
 | Port | Device | Secure MAC type | Max | Violation | Aging |
 |---|---|---|---|---|---|
