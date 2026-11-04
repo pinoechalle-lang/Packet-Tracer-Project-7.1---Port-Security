@@ -73,23 +73,27 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 | SWA | Fa0/2 | The switch learns the device itself, and violations are logged without causing an outage |
 | SWA | Fa0/3 | Two devices share a hub, so the maximum is 2. A third device is dropped silently |
 | SWA | Fa0/4 | The only port where the MAC is forgotten, to demonstrate dynamic learning and aging |
-| SWA | Fa0/10 | The port that has a trunk link to SWB, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. |
-| SWA | G0/1 | The port that has a trunk link to R1, carrying tagged and untagged frames from all VLANs to the router for Inter-VLAN routing. |
+| SWA | Fa0/10 | The port that has a trunk link to SWB, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. No port security configured |
+| SWA | G0/1 | The port that has a trunk link to R1, carrying tagged and untagged frames from all VLANs to the router for Inter-VLAN routing. No port security configured |
 | SWA | Unused ports | A shut-down port in VLAN 672, a designated dead-end VLAN that gives an intruder neither a link nor a route |
 | SWB | Fa0/1 | Only port with a manually entered MAC plus a learned one |
 | SWB | Fa0/2 | Same sticky policy as SWA Fa0/2, but with `shutdown` and on a second switch |
-| SWB | Fa0/10 | The port that has a trunk link to SWA, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. |
+| SWB | Fa0/10 | The port that has a trunk link to SWA, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. No port security configured |
 | SWB | Unused ports | A shut-down port in VLAN 674, a designated dead-end VLAN that gives an intruder neither a link nor a route |
+
+> **NOTE:** Port security is not configured on the trunk ports. Each trunk carries traffic for multiple devices across multiple VLANs, so it can learn many source MAC addresses. A secure-MAC limit could be exceeded during normal operation, and a violation could disrupt the trunk and affect connectivity across multiple VLANs. Instead, the trunks are secured by explicitly configuring the trunk mode, allowed VLANs, and native VLAN on both ends.
 
 ---
 
-#### C.2. Trunk Policies in SWA and SWB
+### D. Trunk Policies in SWA and SWB
 
 
 
 ---
 
 ### Troubleshooting Commands
+
+Refer to the table below to troubleshoot issues related to port security protocols. Additionally, use these provided commands to doublecheck your configurations that you made.
 
 | Command | What It Does | When to Use It | How It Differs |
 |---|---|---|---|
