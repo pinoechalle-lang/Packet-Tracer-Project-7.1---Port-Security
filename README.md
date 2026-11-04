@@ -65,7 +65,7 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 | Fa0/10 | SWA | Trunk | None | n/a | n/a |
 | Fa0/3-9, Fa0/11-24, G0/1-2 | None | n/a | n/a | n/a | Parked in VLAN 674, shut down |
 
-##### Why Each Port Uses Its Policy
+#### Why Each Port Uses Its Policy
 
 | Switch | Port | Reasoning |
 |---|---|---|
@@ -75,10 +75,11 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 | SWA | Fa0/4 | The only port where the MAC is forgotten, to demonstrate dynamic learning and aging |
 | SWA | Fa0/10 | The port that has a trunk link to SWB, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. |
 | SWA | G0/1 | The port that has a trunk link to R1, carrying tagged and untagged frames from all VLANs to the router for Inter-VLAN routing. |
+| SWA | Unused ports | A shut-down port in VLAN 672, a designated dead-end VLAN that gives an intruder neither a link nor a route |
 | SWB | Fa0/1 | Only port with a manually entered MAC plus a learned one |
 | SWB | Fa0/2 | Same sticky policy as SWA Fa0/2, but with `shutdown` and on a second switch |
 | SWB | Fa0/10 | The port that has a trunk link to SWA, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. |
-| Unused ports | A shut-down port in a dead-end VLAN gives an intruder neither a link nor a route |
+| SWB | Unused ports | A shut-down port in VLAN 674, a designated dead-end VLAN that gives an intruder neither a link nor a route |
 
 ---
 
