@@ -87,7 +87,11 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 
 ### D. Trunk Policies in SWA and SWB
 
-
+| Switch | Trunked Port | Native VLAN | Allowed VLANs | Connected to |
+|---|---|---|---|---|
+| SWA | Fa0/10 | VLAN 190 (untagged) | VLAN 50,60,190 | SWB |
+| SWA | G0/1 | VLAN 190 (untagged) | VLAN 10,20,30,40,50,60,190 | R1|
+| SWB | Fa0/10 | VLAN 190 (untagged) | V:AN 50,60,190 | SWA |
 
 ---
 
