@@ -20,155 +20,169 @@ The network engineer (you) is asked to configure the branch access switches so t
 
 ### B. Why Port Security Matters
 
-A switch builds its MAC address (CAM) table by reading the **source MAC address** of every frame it receives. By default, it trusts whatever it sees.
+A switch builds its MAC address (CAM) table by reading the **source MAC address** of every frame it receives. By default, it learns source MAC addresses without restricting which devices may use a port.
 
 | Problem | What happens |
 |---|---|
-| **Unauthorized device** | Anyone can plug into an open port and get network access |
-| **MAC flooding** | An attacker sends thousands of frames with fake source MACs. The CAM table fills up and the switch floods frames out of every port, so the attacker can capture other users' traffic |
-| **Rogue switch or hub** | Extra devices appear behind a single port without IT's knowledge |
+| **Unauthorized device** | Someone can connect an unapproved device to an open port and potentially access the network. |
+| **MAC flooding** | A device sends many frames with different fake source MAC addresses. This can fill the switch's MAC table and cause unknown-unicast traffic to be flooded. |
+| **Unapproved hub or switch** | Additional devices may appear behind one port without IT's knowledge. |
 
-Port Security limits **which** MAC addresses, and **how many**, are allowed on a port, and defines what happens when the limit is broken.
+Port security limits **which MAC addresses, and how many, are allowed on a port**, and defines how the switch responds when the limit is exceeded.
 
 ---
 
 ### C. Requirements
 
-- Only approved devices may use each access port. 
+- Only approved devices may use each access port.
 - The reaction to an unauthorized device must match the risk of the location.
-- Approved devices must keep working after a reboot, where the business needs that. 
-- Unused wall jacks and switch ports must not provide network access. 
-- A shared office port must support exactly two devices behind a hub. 
-- IT must be able to see which port was violated and by which MAC. 
-- IT must be able to restore a locked-down port quickly once the problem is resolved. 
--Departments must still be able to communicate with each other (through R1).
+- Approved devices must keep working after a reboot where the business requires that.
+- Unused wall jacks and switch ports must not provide network access.
+- A shared office port must support exactly two devices behind a hub.
+- IT must be able to identify the port and MAC address associated with a violation.
+- IT must be able to restore a locked-down port quickly after resolving the issue.
+- Departments must be able to communicate with each other through R1.
 
-### C.1. Security Policies for Each Port in SWA and SWB
-##### A. SWA
+### C.1. Security Policies for SWA and SWB
 
-| Port | Device | Secure MAC type | Max | Violation | Aging |
-|---|---|---|---|---|---|
+#### A. SWA
+
+| Port | Device | Secure MAC type | Maximum | Violation action | Aging |
+|---|---|---|---:|---|---|
 | Fa0/1 | PC-A1 | **Static** | 1 | `shutdown` | None |
 | Fa0/2 | PC-A2 | **Sticky** | 1 | `restrict` | None |
-| Fa0/3 | Hub-A (PC-A3, PC-A4) | **Sticky** | 2 | `protect` | None |
-| Fa0/4 | PC-A5 | **Dynamic** | 1 | `restrict` | 2 min (absolute) |
-| Fa0/10 | SWB | Trunk | None at baseline | n/a | n/a |
-| G0/1 | R1 | Trunk | None | n/a | n/a |
-| Fa0/5-9, Fa0/11-24, G0/2 | None | n/a | n/a | n/a | Parked in VLAN 672, shut down |
+| Fa0/3 | Hub-A (PC-A3 and PC-A4) | **Sticky** | 2 | `protect` | None |
+| Fa0/4 | PC-A5 | **Dynamic** | 1 | `restrict` | 2 minutes (absolute) |
+| Fa0/10 | SWB | Trunk; no port security | n/a | n/a | n/a |
+| G0/1 | R1 | Trunk; no port security | n/a | n/a | n/a |
+| Fa0/5-9, Fa0/11-24, G0/2 | Unused | n/a | n/a | n/a | Assigned to VLAN 672 and shut down |
 
-##### B. SWB
+#### B. SWB
 
-| Port | Device | Secure MAC type | Max | Violation | Aging |
-|---|---|---|---|---|---|
-| Fa0/1 | PC-B1 | **Static + sticky** | 2 | `shutdown` | None |
+| Port | Device | Secure MAC type | Maximum | Violation action | Aging |
+|---|---|---|---:|---|---|
+| Fa0/1 | PC-B1 | **One static + one sticky** | 2 | `shutdown` | None |
 | Fa0/2 | PC-B2 | **Sticky** | 1 | `shutdown` | None |
-| Fa0/10 | SWA | Trunk | None | n/a | n/a |
-| Fa0/3-9, Fa0/11-24, G0/1-2 | None | n/a | n/a | n/a | Parked in VLAN 674, shut down |
+| Fa0/10 | SWA | Trunk; no port security | n/a | n/a | n/a |
+| Fa0/3-9, Fa0/11-24, G0/1-2 | Unused | n/a | n/a | n/a | Assigned to VLAN 674 and shut down |
 
 #### Why Each Port Uses Its Policy
 
-| Switch | Port | Reasoning |
+| Switch | Port | Reason |
 |---|---|---|
-| SWA | Fa0/1 | Management traffic. Only one known device is ever allowed, and anything else should lock the port |
-| SWA | Fa0/2 | The switch learns the device itself, and violations are logged without causing an outage |
-| SWA | Fa0/3 | Two devices share a hub, so the maximum is 2. A third device is dropped silently |
-| SWA | Fa0/4 | The only port where the MAC is forgotten, to demonstrate dynamic learning and aging |
-| SWA | Fa0/10 | The port that has a trunk link to SWB, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. No port security configured |
-| SWA | G0/1 | The port that has a trunk link to R1, carrying tagged and untagged frames from all VLANs to the router for Inter-VLAN routing. No port security configured |
-| SWA | Unused ports | A shut-down port in VLAN 672, a designated dead-end VLAN that gives an intruder neither a link nor a route |
-| SWB | Fa0/1 | Only port with a manually entered MAC plus a learned one |
-| SWB | Fa0/2 | Same sticky policy as SWA Fa0/2, but with `shutdown` and on a second switch |
-| SWB | Fa0/10 | The port that has a trunk link to SWA, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. No port security configured |
-| SWB | Unused ports | A shut-down port in VLAN 674, a designated dead-end VLAN that gives an intruder neither a link nor a route |
+| SWA | Fa0/1 | Management traffic is limited to one known device; an unexpected MAC shuts down the port. |
+| SWA | Fa0/2 | The switch learns the approved device's MAC address. A violation is recorded and traffic is dropped without shutting down the port. |
+| SWA | Fa0/3 | Two devices share a hub, so the limit is two MAC addresses. An additional MAC is dropped by the `protect` action. |
+| SWA | Fa0/4 | Demonstrates dynamic secure-MAC learning and absolute aging. |
+| SWA | Fa0/10 | Trunk to SWB carrying traffic for multiple devices and VLANs. Port security is intentionally omitted. |
+| SWA | G0/1 | Trunk to R1 carrying traffic for multiple VLANs. Port security is intentionally omitted. |
+| SWA | Unused ports | Shut down and assigned to VLAN 672, a parking VLAN that is not used for normal network access. |
+| SWB | Fa0/1 | Demonstrates one manually configured secure MAC address plus one sticky-learned address. |
+| SWB | Fa0/2 | Sticky learning is used, but a violation shuts down the port. |
+| SWB | Fa0/10 | Trunk to SWA carrying traffic for multiple devices and VLANs. Port security is intentionally omitted. |
+| SWB | Unused ports | Shut down and assigned to VLAN 674, a parking VLAN that is not used for normal network access. |
 
-> **NOTE:** Port security is not configured on the trunk ports. Each trunk carries traffic for multiple devices across multiple VLANs, so it can learn many source MAC addresses. A secure-MAC limit could be exceeded during normal operation, and a violation could disrupt the trunk and affect connectivity across multiple VLANs. Instead, the trunks are secured by explicitly configuring the trunk mode, allowed VLANs, and native VLAN on both ends.
+> **Why port security is omitted on trunks:** A trunk carries source MAC addresses for many devices across multiple VLANs. A secure-MAC limit may be exceeded during normal operation; a violation could disrupt the trunk and affect multiple VLANs. This project secures trunks by explicitly configuring trunk mode, allowed VLANs, and the native VLAN consistently at both ends.
 
 ---
 
 ### D. Trunk Policies in SWA and SWB
 
-| Switch | Trunked Port | Native VLAN | Allowed VLANs | Connected to |
+| Switch | Trunk port | Native VLAN | Allowed VLANs | Connected to |
 |---|---|---|---|---|
-| SWA | Fa0/10 | VLAN 190 (untagged) | VLAN 50,60,190 | SWB |
-| SWA | G0/1 | VLAN 190 (untagged) | VLAN 10,20,30,40,50,60,190 | R1|
-| SWB | Fa0/10 | VLAN 190 (untagged) | V:AN 50,60,190 | SWA |
+| SWA | Fa0/10 | VLAN 190 (untagged) | 50, 60, 190 | SWB |
+| SWA | G0/1 | VLAN 190 (untagged) | 10, 20, 30, 40, 50, 60, 190 | R1 |
+| SWB | Fa0/10 | VLAN 190 (untagged) | 50, 60, 190 | SWA |
 
-> **NOTE:** All trunks in this topology use VLAN 190 as their native VLAN for consistency. The native VLAN must match at both ends of each trunk. Using the same native VLAN on separate trunks is a design choice for consistency.
+> **Native VLAN note:** The native VLAN must match at both ends of each trunk because native-VLAN traffic is untagged. VLAN 190 is used on all trunks here for consistency; using the same native VLAN across separate trunk links is a design choice.
 
 ---
 
 ### E. Test and Validate the Configurations
 
-Perform these tests in Packet Tracer after configuring the switches. Test violation actions only on access ports, not on trunks.
+Perform these checks in Packet Tracer after configuring the switches. Test violation actions only on access ports, never on trunk ports.
 
-- Check the port-security and trunk configurations using `show port-security`, `show port-security address`, and `show interfaces trunk`.
-- Connect each approved device and confirm that it has network access.
-- Confirm if the right MAC/s is configured in the secured MAC list of each port by issuing the command `show running-config`.
-- In the lab, test an unauthorized device on an access port and confirm the configured violation action: protect drops traffic, restrict drops and records the violation, and shutdown disables the port.
-- Test connectivity between departments with ping to confirm inter-VLAN routing through R1.
-- Confirm unused ports are shut down and assigned to their designated parking VLANs.
+1. **Check the configuration:** Run `show port-security`, `show port-security address`, and `show interfaces trunk` on the switches.
+2. **Check secure MAC addresses:** Use `show port-security address` to view secure MAC addresses and their types. Use `show mac address-table interface <interface>` to see MAC addresses learned on a particular port. `show running-config` shows configured settings and saved sticky MAC entries, not every dynamically learned address.
+3. **Test approved devices:** Connect each approved device and confirm it has network access.
+4. **Test violation behavior in the lab:** On an access port only, connect an unauthorized device and confirm the configured response: `protect` drops unauthorized traffic, `restrict` drops and records it, and `shutdown` places the port into an error-disabled state.
+5. **Test inter-VLAN connectivity:** Use `ping` between devices in different departments to confirm routing through R1.
+6. **Check unused ports:** Use `show vlan brief` and `show interfaces status` to confirm unused ports are in the designated parking VLAN and shut down.
+
+For `shutdown` tests, reconnect the approved device and follow the recovery steps in Section F.1.
 
 ---
 
-### F. Troubleshooting Commands
+### F. Troubleshooting
 
-Refer to the table below to troubleshoot issues related to port security protocols. Additionally, use these provided commands to doublecheck your configurations that you made.
+| Command | What it shows | When to use it |
+|---|---|---|
+| `show port-security` | Secure ports, maximum and current MAC counts, violation counts, and actions | Overview of port-security status |
+| `show port-security interface <interface>` | Port-security status and details, including the last source MAC and VLAN | Investigating a violation on one port |
+| `show port-security address` | Secure MAC addresses, their types, ports, and remaining age where supported | Checking secure MAC entries |
+| `show mac address-table` | The switch MAC address table, including non-secure entries | Finding where a MAC address was learned |
+| `show mac address-table interface <interface>` | MAC addresses learned on a particular port | Checking the devices learned on one port |
+| `show interfaces status` | Port state, VLAN, duplex, and speed | Finding ports that are `err-disabled` or administratively down |
+| `show interfaces trunk` | Operational trunks, native VLANs, and allowed VLANs | Checking trunk configuration and status |
+| `show vlan brief` | VLANs and their assigned ports | Checking access and parking VLAN assignments |
+| `show running-config interface <interface>` | Configuration applied to one interface | Checking port settings and configured sticky/static MAC entries |
 
-| Command | What It Does | When to Use It | How It Differs |
-|---|---|---|---|
-| `show port-security` | One line per secure port: maximum, current count, violation count, action | First check, to get an overview | Summary only. No MAC addresses |
-| `show port-security interface <interface>` | Full detail for one port: status, mode, counts, last source MAC and VLAN | Investigating one violation | Per-port detail |
-| `show port-security address` | Every secure MAC with type (SecureConfigured, SecureSticky, SecureDynamic), port, and remaining age | Confirming MAC types and aging | MACs only, without port settings |
-| `show mac address-table` | The full CAM table | Confirming where a device was learned | Includes non-secure entries |
-| `show interfaces status` | Port state, VLAN, duplex, speed | Spotting `err-disabled` and disabled ports | Layer 1/2 state only |
-| `show interfaces trunk` | Trunk ports, native VLAN, allowed VLANs | Checking both ends of a trunk match | Trunk view of the switch |
-| `show vlan brief` | VLANs and their ports | Confirming parked ports | VLAN view of the ports |
-| `show running-config interface <interface>` | One interface's configuration | Confirming sticky lines were written | Configuration, not live state |
-
-> **NOTE:** In `show port-security interface`, read **Last Source Address:VLAN** to find the MAC that caused the latest violation.
+> **Violation detail:** On `show port-security interface <interface>`, check **Last Source Address:VLAN** for the source MAC and VLAN associated with the latest violation.
 
 #### F.1. Re-enable an `err-disabled` port
 
-If a port-security `shutdown` violation puts a port into the `err-disabled` state:
-
-1. Check the port and identify the violation with `show port-security interface <interface>` and `show interfaces status`.
-2. Remove the unauthorized device and connect the approved device.
-3. Re-enable the port:
+A port using the `shutdown` violation action may become `err-disabled` after a violation. First remove the unauthorized device and check the cause; then re-enable the interface:
 
 ```text
+show port-security interface fa0/1
+show interfaces status
+
 configure terminal
-interface <interface>
+interface fa0/1
 shutdown
 no shutdown
 end
 ```
 
-Replace `<interface>` with the affected port, for example `fa0/1`. Re-enabling the port does not resolve the cause of the violation, so make sure the unauthorized device has been removed first.
+Replace `fa0/1` with the affected interface. The shutdown/no-shutdown sequence resets the interface, but it does not fix the cause of the violation. Make sure the unauthorized device is removed before bringing the port back up.
 
-#### F.2. Check MAC Address/es on a Port
-Use these commands to see which MAC addresses are associated with an interface:
+#### F.2. Check MAC addresses on a port
+
+Replace `fa0/1` with the interface you want to inspect:
 
 ```text
 show mac address-table interface fa0/1
-show port-security address
 show port-security interface fa0/1
+show port-security address
 ```
 
-Replace `fa0/1` with the interface you want to check. The MAC address table shows addresses learned on the port; the port-security commands show secure addresses and violation details.
+The MAC address table shows addresses learned on the port. The port-security commands show secure entries and violation details. Dynamically learned secure addresses may not appear in the running configuration.
 
 #### F.3. Remove a secure MAC address
 
-The removal method depends on how the secure MAC address was added:
+Packet Tracer does not support the `clear port-security` commands for this project. Remove a configured secure MAC from the interface configuration instead. Use the exact MAC address and entry type shown in the configuration.
 
-- **Remove secure MAC:** Remove its entry from the interface configuration:
-  ```text
-  configure terminal
-  interface fa0/1
-   no switchport port-security mac-address <mac-address>
-  exit
-  ```
+To remove a manually configured secure MAC address:
 
-After removing the secure MAC, you can either configure a new one or if dynamic MAC learning is enabled on the port, simply attach whatever device to a porn.
+```text
+configure terminal
+interface fa0/1
+no switchport port-security mac-address xxxx.xxxx.xxxx
+end
+```
+
+To remove a configured sticky MAC entry, negate the sticky entry:
+
+```text
+configure terminal
+interface fa0/2
+no switchport port-security mac-address sticky xxxx.xxxx.xxxx
+end
+```
+
+Replace the example interface and MAC address with the actual values. Packet Tracer command support can vary by version; check the interface configuration and verify the result with `show port-security address` and `show running-config interface <interface>`.
+
+The dynamically learned secure MAC on SWA Fa0/4 is configured to age out after two minutes (absolute aging). It can be learned again when the approved device sends traffic. Clearing the regular MAC address table is not the same as removing a secure MAC entry. Save configuration changes if they should remain after a reboot:
 
 ```text
 copy running-config startup-config
@@ -178,7 +192,7 @@ copy running-config startup-config
 
 ### G. Known Limitations
 
-- Packet Tracer can't generate a real MAC flooding attack.
-- The features of port security in Packet Tracer are limited
+- Packet Tracer cannot generate a real MAC flooding attack.
+- Port-security features in Packet Tracer are limited and may differ from real switch hardware.
 - Violation counters and syslog details may differ from real hardware.
 - Voice VLANs and per-VLAN maximums are not covered.
