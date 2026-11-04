@@ -43,8 +43,6 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 - IT must be able to restore a locked-down port quickly once the problem is resolved. 
 -Departments must still be able to communicate with each other (through R1).
 
----
-
 #### C.1. Security Policies for Each Port in SWA and SWB
 ##### SWA
 
