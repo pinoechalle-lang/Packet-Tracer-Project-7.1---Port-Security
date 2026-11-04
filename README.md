@@ -4,7 +4,7 @@
 
 ---
 
-### Scenario
+### A. Scenario
 
 **Company:** Larkspur Logistics (fictional), a regional distribution company.
 
@@ -18,7 +18,7 @@ The network engineer (you) is asked to configure the branch access switches so t
 
 ---
 
-### Why Port Security Matters
+### B. Why Port Security Matters
 
 A switch builds its MAC address (CAM) table by reading the **source MAC address** of every frame it receives. By default, it trusts whatever it sees.
 
@@ -32,7 +32,7 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 
 ---
 
-### Requirements
+### C. Requirements
 
 - Only approved devices may use each access port. 
 - The reaction to an unauthorized device must match the risk of the location.
@@ -41,4 +41,55 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 - A shared office port must support exactly two devices behind a hub. 
 - IT must be able to see which port was violated and by which MAC. 
 - IT must be able to restore a locked-down port quickly once the problem is resolved. 
--Departments must still be able to communicate with each other (through R1). 
+-Departments must still be able to communicate with each other (through R1).
+
+---
+
+#### C.1. Security Policies for Each Port in SWA and SWB
+##### SWA
+
+| Port | Device | Secure MAC type | Max | Violation | Aging |
+|---|---|---|---|---|---|
+| Fa0/1 | PC-A1 | **Static** | 1 | `shutdown` | None |
+| Fa0/2 | PC-A2 | **Sticky** | 1 | `restrict` | None |
+| Fa0/3 | Hub-A (PC-A3, PC-A4) | **Sticky** | 2 | `protect` | None |
+| Fa0/4 | PC-A5 | **Dynamic** | 1 | `restrict` | 2 min (absolute) |
+| Fa0/10 | SWB | Trunk | None at baseline | n/a | n/a |
+| G0/1 | R1 | Trunk | None | n/a | n/a |
+| Fa0/5-9, Fa0/11-24, G0/2 | None | n/a | n/a | n/a | Parked in VLAN 672, shut down |
+
+##### SWB
+
+| Port | Device | Secure MAC type | Max | Violation | Aging |
+|---|---|---|---|---|---|
+| Fa0/1 | PC-B1 | **Static + sticky** | 2 | `shutdown` | None |
+| Fa0/2 | PC-B2 | **Sticky** | 1 | `shutdown` | None |
+| Fa0/10 | SWA | Trunk | None | n/a | n/a |
+| Fa0/3-9, Fa0/11-24, G0/1-2 | None | n/a | n/a | n/a | Parked in VLAN 674, shut down |
+
+---
+
+### Troubleshooting Commands
+
+| Command | What It Does | When to Use It | How It Differs |
+|---|---|---|---|
+| `show port-security` | One line per secure port: maximum, current count, violation count, action | First check, to get an overview | Summary only. No MAC addresses |
+| `show port-security interface <interface>` | Full detail for one port: status, mode, counts, last source MAC and VLAN | Investigating one violation | Per-port detail |
+| `show port-security address` | Every secure MAC with type (SecureConfigured, SecureSticky, SecureDynamic), port, and remaining age | Confirming MAC types and aging | MACs only, without port settings |
+| `show mac address-table` | The full CAM table | Confirming where a device was learned | Includes non-secure entries |
+| `show interfaces status` | Port state, VLAN, duplex, speed | Spotting `err-disabled` and disabled ports | Layer 1/2 state only |
+| `show interfaces trunk` | Trunk ports, native VLAN, allowed VLANs | Checking both ends of a trunk match | Trunk view of the switch |
+| `show vlan brief` | VLANs and their ports | Confirming parked ports | VLAN view of the ports |
+| `show running-config interface <interface>` | One interface's configuration | Confirming sticky lines were written | Configuration, not live state |
+
+> **NOTE:** In `show port-security interface`, read **Last Source Address:VLAN** to find the MAC that caused the latest violation.
+
+
+---
+
+### Known Limitations
+
+- Packet Tracer can't generate a real MAC flooding attack.
+- The features of port security in Packet Tracer are limited
+- Violation counters and syslog details may differ from real hardware.
+- Voice VLANs and per-VLAN maximums are not covered.
