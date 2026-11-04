@@ -104,53 +104,7 @@ R1 provides inter-VLAN routing using router-on-a-stick. Each user VLAN has a /24
 
 The host IP addresses should be in the subnet for their VLAN, use mask `255.255.255.0`, and use the listed R1 address as the default gateway. VLAN 190 is the native VLAN on the trunks; the supplied router configuration does not assign it a user subnet or gateway.
 
-Configure R1's `G0/0` interface as follows. The subinterface VLAN IDs and IP addresses must match the VLAN and subnet plan above:
-
-```text
-enable
-configure terminal
-hostname R1
-no ip domain-lookup
-
-interface g0/0
- no shutdown
-exit
-
-interface g0/0.10
- encapsulation dot1q 10
- ip address 192.168.10.254 255.255.255.0
-exit
-
-interface g0/0.20
- encapsulation dot1q 20
- ip address 192.168.20.254 255.255.255.0
-exit
-
-interface g0/0.30
- encapsulation dot1q 30
- ip address 192.168.30.254 255.255.255.0
-exit
-
-interface g0/0.40
- encapsulation dot1q 40
- ip address 192.168.40.254 255.255.255.0
-exit
-
-interface g0/0.50
- encapsulation dot1q 50
- ip address 192.168.50.254 255.255.255.0
-exit
-
-interface g0/0.60
- encapsulation dot1q 60
- ip address 192.168.60.254 255.255.255.0
-exit
-
-end
-copy running-config startup-config
-```
-
-Connect R1 `G0/0` to SWA `G0/1`. The SWA-to-R1 trunk must allow VLANs 10, 20, 30, 40, 50, 60, and 190. The router configuration shown above follows the supplied project configuration; it does not create a routed subinterface for native VLAN 190.
+Connect R1 `G0/0` to SWA `G0/1`. The SWA-to-R1 trunk must allow VLANs 10, 20, 30, 40, 50, 60, and 190. 
 
 ---
 
