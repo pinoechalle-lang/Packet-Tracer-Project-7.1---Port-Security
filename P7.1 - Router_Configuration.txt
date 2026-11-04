@@ -1,0 +1,58 @@
+=========================================================================================
+R1
+=========================================================================================
+
+==========[ Escalate Mode ]==========
+
+enable
+
+configure terminal
+
+
+==========[ Basic Configurations ]==========
+
+hostname R1
+
+no ip domain-lookup
+
+
+==========[ Creating Sub-Interfaces ]==========
+
+interface g0/0
+ no shutdown
+exit
+
+interface g0/0.10
+ encapsulation dot1q 10
+ ip address 192.168.10.254 255.255.255.0
+exit
+
+interface g0/0.20
+ encapsulation dot1q 20
+ ip address 192.168.20.254 255.255.255.0
+exit
+
+interface g0/0.30
+ encapsulation dot1q 30
+ ip address 192.168.30.254 255.255.255.0
+exit
+
+interface g0/0.40
+ encapsulation dot1q 40
+ ip address 192.168.40.254 255.255.255.0
+exit
+
+interface g0/0.50
+ encapsulation dot1q 50
+ ip address 192.168.50.254 255.255.255.0
+exit
+
+interface g0/0.60
+ encapsulation dot1q 60
+ ip address 192.168.60.254 255.255.255.0
+exit
+
+
+==========[ Save Running Configuration (Global) ]==========
+
+do copy running-config startup-config
