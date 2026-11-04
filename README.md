@@ -65,6 +65,27 @@ Port Security limits **which** MAC addresses, and **how many**, are allowed on a
 | Fa0/10 | SWA | Trunk | None | n/a | n/a |
 | Fa0/3-9, Fa0/11-24, G0/1-2 | None | n/a | n/a | n/a | Parked in VLAN 674, shut down |
 
+##### Why Each Port Uses Its Policy
+
+| Switch | Port | Reasoning |
+|---|---|---|
+| SWA | Fa0/1 | Management traffic. Only one known device is ever allowed, and anything else should lock the port |
+| SWA | Fa0/2 | The switch learns the device itself, and violations are logged without causing an outage |
+| SWA | Fa0/3 | Two devices share a hub, so the maximum is 2. A third device is dropped silently |
+| SWA | Fa0/4 | The only port where the MAC is forgotten, to demonstrate dynamic learning and aging |
+| SWA | Fa0/10 | The port that has a trunk link to SWB, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. |
+| SWA | G0/1 | The port that has a trunk link to R1, carrying tagged and untagged frames from all VLANs to the router for Inter-VLAN routing. |
+| SWB | Fa0/1 | Only port with a manually entered MAC plus a learned one |
+| SWB | Fa0/2 | Same sticky policy as SWA Fa0/2, but with `shutdown` and on a second switch |
+| SWB | Fa0/10 | The port that has a trunk link to SWA, carrying tagged frames from VLAN 50 and 60, and untagged frames from Native VLAN 190 in both switches. |
+| Unused ports | A shut-down port in a dead-end VLAN gives an intruder neither a link nor a route |
+
+---
+
+#### C.2. Trunk Policies in SWA and SWB
+
+
+
 ---
 
 ### Troubleshooting Commands
