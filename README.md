@@ -127,7 +127,7 @@ Refer to the table below to troubleshoot issues related to port security protoco
 
 > **NOTE:** In `show port-security interface`, read **Last Source Address:VLAN** to find the MAC that caused the latest violation.
 
-#### Re-enable an `err-disabled` port
+#### F.1. Re-enable an `err-disabled` port
 
 If a port-security `shutdown` violation puts a port into the `err-disabled` state:
 
